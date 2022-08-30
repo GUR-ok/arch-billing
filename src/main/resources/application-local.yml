@@ -1,0 +1,18 @@
+server:
+  servlet:
+    context-path: /
+  # http://localhost:8080/swagger-ui.html
+  port: 8080
+
+management:
+  server:
+    port: 8003
+  endpoints:
+    web:
+      base-path: /
+
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    ru.gur.arch: DEBUG
