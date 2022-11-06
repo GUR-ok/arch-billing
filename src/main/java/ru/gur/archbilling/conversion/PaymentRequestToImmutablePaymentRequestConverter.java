@@ -11,7 +11,7 @@ public class PaymentRequestToImmutablePaymentRequestConverter implements Convert
     @Override
     public ImmutablePaymentRequest convert(final PaymentRequest source) {
         return ImmutablePaymentRequest.builder()
-                .id(source.getId())
+                .id(source.getAccountId())
                 .amount(source.getAmount())
                 .build();
     }

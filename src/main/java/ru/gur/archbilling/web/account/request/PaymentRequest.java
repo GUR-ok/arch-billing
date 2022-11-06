@@ -13,7 +13,7 @@ import java.util.UUID;
 public class PaymentRequest {
 
     @NotNull
-    private UUID id;
+    private UUID accountId;
 
     @NotNull
     @Positive
