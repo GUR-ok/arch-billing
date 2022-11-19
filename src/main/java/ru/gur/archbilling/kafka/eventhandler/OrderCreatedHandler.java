@@ -35,7 +35,7 @@ public class OrderCreatedHandler implements EventHandler<OrderCreatedEventData> 
         accountService.makePayment(ImmutablePaymentRequest.builder()
                 .id(eventSource.getAccountId())
                 .amount(BigDecimal.valueOf(eventSource.getPrice()))
-            .build());
+            .build(), eventSource.getOrderId());
 
         log.info("Event handled: {}", eventSource);
 

@@ -1,8 +1,13 @@
 package ru.gur.archbilling.service;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.StoreQueryParameters;
+import org.apache.kafka.streams.state.QueryableStoreTypes;
+import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
+import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -15,6 +20,7 @@ import ru.gur.archbilling.service.data.AccountData;
 import ru.gur.archbilling.service.immutable.ImmutablePaymentRequest;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.UUID;
 
 @Primary
@@ -27,6 +33,7 @@ public class AccountServiceHW09Impl implements AccountService {
 
     private final AccountRepository accountRepository;
     private final Producer producer;
+    private final StreamsBuilderFactoryBean factoryBean;
 
     @Override
     @Transactional
@@ -41,14 +48,19 @@ public class AccountServiceHW09Impl implements AccountService {
     public AccountData getAccountInfo(final UUID accountId) {
         Assert.notNull(accountId, "accountId must not be null");
 
-        return accountRepository.findById(accountId)
+        KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
+
+        final ReadOnlyKeyValueStore<String, Double> readOnlyKeyValueStore =
+                kafkaStreams.store(StoreQueryParameters.fromNameAndType("counts", QueryableStoreTypes.keyValueStore()));
+        readOnlyKeyValueStore.all()
+                .forEachRemaining(x -> System.out.println(x.key + "->" + x.value));
+
+        return Optional.ofNullable(readOnlyKeyValueStore.get(accountId.toString()))
                 .map(a -> AccountData.builder()
-                        .id(a.getId())
-                        .balance(a.getBalance())
-                        .created(a.getCreated())
-                        .updated(a.getUpdated())
+                        .id(accountId)
+                        .balance(BigDecimal.valueOf(a))
                         .build())
-                .orElseThrow(() -> new RuntimeException("account not found"));
+                .orElseThrow(() -> new RuntimeException("account balance not found"));
     }
 
     @Override
@@ -70,7 +82,6 @@ public class AccountServiceHW09Impl implements AccountService {
     }
 
     @Override
-    @Transactional
     public UUID makePayment(ImmutablePaymentRequest paymentRequest, UUID orderId) {
         Assert.notNull(paymentRequest, "paymentRequest must not be null");
 
@@ -86,9 +97,8 @@ public class AccountServiceHW09Impl implements AccountService {
             throw new RuntimeException("not enough money on the balance");
         }
 
-        account.setBalance(account.getBalance().subtract(paymentRequest.getAmount()));
-        accountRepository.save(account);
-
+        producer.sendDouble("KeyValueTopic", paymentRequest.getId().toString(),
+                paymentRequest.getAmount().negate().doubleValue());
         producer.sendEvent(TOPIC, paymentRequest.getId().toString(), OrderPaidEventData.builder()
                 .orderId(orderId)
                 .build());
