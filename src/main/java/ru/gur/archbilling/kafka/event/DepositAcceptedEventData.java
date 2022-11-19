@@ -11,6 +11,8 @@ public class DepositAcceptedEventData implements KafkaEvent {
 
     UUID accountId;
 
+    Double value;
+
     @Override
     public Event getEvent() {
         return Event.DEPOSIT_ACCEPTED;

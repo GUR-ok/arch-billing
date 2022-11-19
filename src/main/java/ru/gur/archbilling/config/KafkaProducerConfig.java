@@ -24,7 +24,7 @@ public class KafkaProducerConfig {
     @Value("${kafka.bootstrapAddress}")
     private String SERVER;
 
-    private ProducerFactory<String, Double> producerFactoryString() {
+    private ProducerFactory<String, Double> producerFactoryDouble() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -38,8 +38,27 @@ public class KafkaProducerConfig {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
+    private ProducerFactory<String, String> producerFactoryString() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(
+                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                SERVER);
+        configProps.put(
+                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                StringSerializer.class);
+        configProps.put(
+                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                StringSerializer.class);
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
     @Bean
-    public KafkaTemplate<String, Double> kafkaTemplateString() {
+    public KafkaTemplate<String, Double> kafkaTemplateDouble() {
+        return new KafkaTemplate<>(producerFactoryDouble());
+    }
+
+    @Bean
+    public KafkaTemplate<String, String> kafkaTemplateString() {
         return new KafkaTemplate<>(producerFactoryString());
     }
 
@@ -51,8 +70,18 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public NewTopic topicBilling() {
+    public NewTopic orderTopic() {
+        return new NewTopic("order", 2, (short) 1);
+    }
+
+    @Bean
+    public NewTopic billingTopic() {
         return new NewTopic("billing", 2, (short) 1);
+    }
+
+    @Bean
+    public NewTopic paymentTopic() {
+        return new NewTopic("payment", 2, (short) 1);
     }
 
     @Bean

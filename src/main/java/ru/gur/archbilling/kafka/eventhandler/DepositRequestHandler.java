@@ -30,7 +30,11 @@ public class DepositRequestHandler implements EventHandler<DepositRequestEventDa
     public String handleEvent(final DepositRequestEventData eventSource) {
         Assert.notNull(eventSource, "EventSource must not be null");
 
-        producer.sendString("KeyValueTopic", eventSource.getAccountId().toString(), eventSource.getValue());
+        producer.sendDouble("KeyValueTopic", eventSource.getAccountId().toString(), eventSource.getValue());
+        producer.sendEvent("payment", eventSource.getAccountId().toString(), DepositAcceptedEventData.builder()
+                .accountId(eventSource.getAccountId())
+                .value(eventSource.getValue())
+                .build());
 
         log.info("Event handled: {}", eventSource);
 

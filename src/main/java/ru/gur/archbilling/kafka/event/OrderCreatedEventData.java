@@ -11,6 +11,8 @@ public class OrderCreatedEventData implements KafkaEvent {
 
     UUID orderId;
 
+    UUID accountId;
+
     Double price;
 
     @Override

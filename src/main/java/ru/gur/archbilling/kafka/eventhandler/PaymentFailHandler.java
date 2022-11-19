@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import ru.gur.archbilling.kafka.Producer;
 import ru.gur.archbilling.kafka.event.Event;
 import ru.gur.archbilling.kafka.event.EventSource;
 import ru.gur.archbilling.kafka.event.PaymentFailEventData;
@@ -15,7 +16,7 @@ import ru.gur.archbilling.kafka.event.PaymentFailEventData;
 @Profile({"hw09","local"})
 public class PaymentFailHandler implements EventHandler<PaymentFailEventData> {
 
-//    private final service;
+    private final Producer producer;
 
     @Override
     public boolean canHandle(final EventSource eventSource) {

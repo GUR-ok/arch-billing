@@ -13,5 +13,7 @@ public interface AccountService {
 
     UUID makePayment(ImmutablePaymentRequest paymentRequest);
 
+    UUID makePayment(ImmutablePaymentRequest paymentRequest, UUID orderId);
+
     Double increaseBalance(UUID accountId, Double amount);
 }

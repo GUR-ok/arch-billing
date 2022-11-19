@@ -11,7 +11,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = OrderCreatedEventData.class, name = "ORDER_CREATED"),
         @JsonSubTypes.Type(value = PaymentFailEventData.class, name = "PAYMENT_FAIL"),
         @JsonSubTypes.Type(value = OrderPaidEventData.class, name = "ORDER_PAID"),
-        @JsonSubTypes.Type(value = OrderCancelledEventData.class, name = "ORDER_CANCEL"),
         @JsonSubTypes.Type(value = DepositAcceptedEventData.class, name = "DEPOSIT_ACCEPTED"),
         @JsonSubTypes.Type(value = DepositRequestEventData.class, name = "DEPOSIT_REQUEST")
 })
