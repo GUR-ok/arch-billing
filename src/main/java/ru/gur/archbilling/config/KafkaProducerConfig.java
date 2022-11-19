@@ -20,6 +20,7 @@ import java.util.Map;
 @Configuration
 @Profile({"hw09","local"})
 public class KafkaProducerConfig {
+
     @Value("${kafka.bootstrapAddress}")
     private String SERVER;
 
@@ -50,8 +51,8 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public NewTopic topicNotification() {
-        return new NewTopic("notification", 2, (short) 1);
+    public NewTopic topicBilling() {
+        return new NewTopic("billing", 2, (short) 1);
     }
 
     @Bean

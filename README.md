@@ -7,6 +7,14 @@
 4) `kubectl create namespace arch-gur`
 5) `helm install arch-billing ./deployment/app/`
    `kubectl get pods -n arch-gur`
+   
+---
+
+Для локального поднятия кафки: `docker-compose-kafka up`
+
+Пример сообщения в Кафку:
+
+{"event":"DEPOSIT_REQUEST", "accountId":"2fa85f64-5717-4562-b3fc-2c963f66afa6", "value":2.0}
 
 ---
 ### Очистка пространства:

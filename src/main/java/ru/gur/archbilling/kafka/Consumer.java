@@ -26,7 +26,7 @@ public class Consumer {
 
     private final Set<EventHandler<EventSource>> eventHandlers;
 
-    @KafkaListener(topics = "notification", containerFactory = "kafkaListenerContainerFactoryString")
+    @KafkaListener(topics = "billing", containerFactory = "kafkaListenerContainerFactoryString")
     public void listenGroupTopic1(String message) {
         log.info("Receive message: {}", message);
 

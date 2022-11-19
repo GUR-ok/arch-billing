@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import ru.gur.archbilling.kafka.Producer;
 import ru.gur.archbilling.kafka.event.DepositAcceptedEventData;
 import ru.gur.archbilling.kafka.event.DepositRequestEventData;
 import ru.gur.archbilling.kafka.event.Event;
@@ -16,7 +17,7 @@ import ru.gur.archbilling.kafka.event.EventSource;
 @Profile({"hw09","local"})
 public class DepositRequestHandler implements EventHandler<DepositRequestEventData> {
 
-//    private final service;
+    private final Producer producer;
 
     @Override
     public boolean canHandle(final EventSource eventSource) {
@@ -29,7 +30,7 @@ public class DepositRequestHandler implements EventHandler<DepositRequestEventDa
     public String handleEvent(final DepositRequestEventData eventSource) {
         Assert.notNull(eventSource, "EventSource must not be null");
 
-//        service.call
+        producer.sendString("KeyValueTopic", eventSource.getAccountId().toString(), eventSource.getValue());
 
         log.info("Event handled: {}", eventSource);
 
