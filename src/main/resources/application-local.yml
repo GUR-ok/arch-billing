@@ -39,3 +39,7 @@ logging:
     root: INFO
     org.springframework: INFO
     ru.gur.arch: DEBUG
+
+kafka:
+  bootstrapAddress: localhost:9091
+  groupId: group1
