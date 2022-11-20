@@ -13,9 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ru.gur.archbilling.entity.Account;
 import ru.gur.archbilling.kafka.Producer;
+import ru.gur.archbilling.kafka.event.DepositRequestEventData;
 import ru.gur.archbilling.kafka.event.OrderPaidEventData;
 import ru.gur.archbilling.kafka.event.PaymentFailEventData;
-import ru.gur.archbilling.persistence.AccountRepository;
 import ru.gur.archbilling.service.data.AccountData;
 import ru.gur.archbilling.service.immutable.ImmutablePaymentRequest;
 
@@ -31,14 +31,12 @@ public class AccountServiceHW09Impl implements AccountService {
 
     private static final String TOPIC = "payment";
 
-    private final AccountRepository accountRepository;
     private final Producer producer;
     private final StreamsBuilderFactoryBean factoryBean;
 
     @Override
     public UUID createAccount() {
         final UUID uuid = UUID.randomUUID();
-        final KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
         producer.sendDouble("KeyValueTopic", uuid.toString(), 0d);
 
         return uuid;
@@ -65,39 +63,23 @@ public class AccountServiceHW09Impl implements AccountService {
     @Override
     @Transactional
     public UUID makePayment(final ImmutablePaymentRequest paymentRequest) {
-        Assert.notNull(paymentRequest, "paymentRequest must not be null");
-
-        final Account account = accountRepository.findByIdLocked(paymentRequest.getId())
-                .orElseThrow(() -> new RuntimeException("account not found"));
-
-        if (account.getBalance().compareTo(paymentRequest.getAmount()) < 0) {
-            throw new RuntimeException("not enough money on the balance");
-        }
-
-        account.setBalance(account.getBalance().subtract(paymentRequest.getAmount()));
-        accountRepository.save(account);
-
-        return account.getId();
+        return UUID.randomUUID();
     }
 
     @Override
     public UUID makePayment(ImmutablePaymentRequest paymentRequest, UUID orderId) {
         Assert.notNull(paymentRequest, "paymentRequest must not be null");
 
-        final KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
-        final ReadOnlyKeyValueStore<String, Double> readOnlyKeyValueStore =
-                kafkaStreams.store(StoreQueryParameters.fromNameAndType("counts", QueryableStoreTypes.keyValueStore()));
-
-        final BigDecimal balance = BigDecimal.valueOf(Optional.ofNullable(readOnlyKeyValueStore.get(paymentRequest.getId().toString()))
-                .orElseThrow(() -> new RuntimeException("account not found")));
+        final BigDecimal balance = BigDecimal.valueOf(getBalance(paymentRequest.getId()));
 
         if (balance.compareTo(paymentRequest.getAmount()) < 0) {
+            System.out.println("!!! not enough money" + paymentRequest);
             producer.sendEvent(TOPIC, paymentRequest.getId().toString(), PaymentFailEventData.builder()
                     .accountId(paymentRequest.getId())
                     .orderId(orderId)
                     .build());
 
-            throw new RuntimeException("not enough money on the balance");
+            return paymentRequest.getId();
         }
 
         producer.sendDouble("KeyValueTopic", paymentRequest.getId().toString(),
@@ -116,12 +98,22 @@ public class AccountServiceHW09Impl implements AccountService {
         Assert.notNull(amount, "amount must not be null");
         Assert.state(amount > 0, "amount must be positive");
 
-        final Account account = accountRepository.findByIdLocked(accountId)
+        final Double balance = getBalance(accountId);
+        producer.sendEvent("billing", accountId.toString(), DepositRequestEventData.builder()
+                .accountId(accountId)
+                .value(amount)
+                .build()
+        );
+
+        return Double.sum(balance, amount);
+    }
+
+    private Double getBalance(final UUID accountId) {
+        final KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
+        final ReadOnlyKeyValueStore<String, Double> readOnlyKeyValueStore =
+                kafkaStreams.store(StoreQueryParameters.fromNameAndType("counts", QueryableStoreTypes.keyValueStore()));
+
+        return Optional.ofNullable(readOnlyKeyValueStore.get(accountId.toString()))
                 .orElseThrow(() -> new RuntimeException("account not found"));
-
-        account.setBalance(account.getBalance().add(BigDecimal.valueOf(amount)));
-        accountRepository.save(account);
-
-        return account.getBalance().doubleValue();
     }
 }

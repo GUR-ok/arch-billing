@@ -1,6 +1,7 @@
 package ru.gur.archbilling.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@ConditionalOnMissingBean(AccountServiceHW09Impl.class)
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
