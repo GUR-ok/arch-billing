@@ -36,20 +36,19 @@ public class AccountServiceHW09Impl implements AccountService {
     private final StreamsBuilderFactoryBean factoryBean;
 
     @Override
-    @Transactional
     public UUID createAccount() {
-        final Account account = new Account();
-        account.setBalance(BigDecimal.ZERO);
+        final UUID uuid = UUID.randomUUID();
+        final KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
+        producer.sendDouble("KeyValueTopic", uuid.toString(), 0d);
 
-        return accountRepository.save(account).getId();
+        return uuid;
     }
 
     @Override
     public AccountData getAccountInfo(final UUID accountId) {
         Assert.notNull(accountId, "accountId must not be null");
 
-        KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
-
+        final KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
         final ReadOnlyKeyValueStore<String, Double> readOnlyKeyValueStore =
                 kafkaStreams.store(StoreQueryParameters.fromNameAndType("counts", QueryableStoreTypes.keyValueStore()));
         readOnlyKeyValueStore.all()
@@ -85,10 +84,14 @@ public class AccountServiceHW09Impl implements AccountService {
     public UUID makePayment(ImmutablePaymentRequest paymentRequest, UUID orderId) {
         Assert.notNull(paymentRequest, "paymentRequest must not be null");
 
-        final Account account = accountRepository.findByIdLocked(paymentRequest.getId())
-                .orElseThrow(() -> new RuntimeException("account not found"));
+        final KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
+        final ReadOnlyKeyValueStore<String, Double> readOnlyKeyValueStore =
+                kafkaStreams.store(StoreQueryParameters.fromNameAndType("counts", QueryableStoreTypes.keyValueStore()));
 
-        if (account.getBalance().compareTo(paymentRequest.getAmount()) < 0) {
+        final BigDecimal balance = BigDecimal.valueOf(Optional.ofNullable(readOnlyKeyValueStore.get(paymentRequest.getId().toString()))
+                .orElseThrow(() -> new RuntimeException("account not found")));
+
+        if (balance.compareTo(paymentRequest.getAmount()) < 0) {
             producer.sendEvent(TOPIC, paymentRequest.getId().toString(), PaymentFailEventData.builder()
                     .accountId(paymentRequest.getId())
                     .orderId(orderId)
@@ -103,7 +106,7 @@ public class AccountServiceHW09Impl implements AccountService {
                 .orderId(orderId)
                 .build());
 
-        return account.getId();
+        return paymentRequest.getId();
     }
 
     @Override
