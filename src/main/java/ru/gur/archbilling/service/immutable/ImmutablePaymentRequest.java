@@ -10,6 +10,9 @@ import java.util.UUID;
 @Builder
 public class ImmutablePaymentRequest {
 
+    /**
+     * accountId
+     */
     UUID id;
 
     BigDecimal amount;

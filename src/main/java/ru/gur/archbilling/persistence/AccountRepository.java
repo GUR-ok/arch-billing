@@ -1,5 +1,6 @@
 package ru.gur.archbilling.persistence;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
+@Profile("!hw09")
 public interface AccountRepository extends JpaRepository<Account, UUID> {
 
     @Lock(value = LockModeType.PESSIMISTIC_WRITE)
