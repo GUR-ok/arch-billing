@@ -84,6 +84,7 @@ public class AccountServiceHW09Impl implements AccountService {
         producer.sendDouble("KeyValueTopic", paymentRequest.getId().toString(),
                 paymentRequest.getAmount().negate().doubleValue());
         producer.sendEvent(TOPIC, paymentRequest.getId().toString(), OrderPaidEventData.builder()
+                .accountId(paymentRequest.getId())
                 .orderId(orderId)
                 .build());
 
