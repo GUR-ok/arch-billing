@@ -86,11 +86,11 @@ public class KafkaProducerConfig {
 
     @Bean
     public NewTopic topicAccountsWithBalance() {
-        return new NewTopic("AccountsWithBalance", 1, (short) 1);
+        return new NewTopic("AccountsWithBalance", 3, (short) 1);
     }
 
     @Bean
     public NewTopic topicKeyValueTopic() {
-        return new NewTopic("KeyValueTopic", 2, (short) 1);
+        return new NewTopic("KeyValueTopic", 3, (short) 1);
     }
 }

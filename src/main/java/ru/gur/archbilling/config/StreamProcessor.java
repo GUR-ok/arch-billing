@@ -1,21 +1,23 @@
 package ru.gur.archbilling.config;
 
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.GlobalKTable;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Produced;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
-import org.springframework.kafka.config.KafkaStreamsConfiguration;
 import org.springframework.stereotype.Component;
 
 import java.util.Properties;
 
 @Component
-@Profile({"hw09","local"})
+@Profile({"hw09", "local"})
 public class StreamProcessor {
 
     @Value("${kafka.bootstrapAddress}")
@@ -31,10 +33,10 @@ public class StreamProcessor {
                 .reduce(Double::sum, Materialized.as("counts"));
 
         accountBalance.toStream().to("AccountsWithBalance", Produced.with(Serdes.String(), Serdes.Double()));
-//
-//        Topology topology = builder.build();
-//        KafkaStreams streamsApp = new KafkaStreams(topology, getKafkaStreamsConfig());
-//        streamsApp.start();
+
+        GlobalKTable<String, Double> textLinesGlobalTable =
+                builder.globalTable("AccountsWithBalance", Consumed.with(Serdes.String(), Serdes.Double()),
+                        Materialized.as("countsGlobal"));
     }
 
     private Properties getKafkaStreamsConfig() {

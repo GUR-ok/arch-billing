@@ -11,7 +11,6 @@ import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ru.gur.archbilling.entity.Account;
 import ru.gur.archbilling.kafka.Producer;
 import ru.gur.archbilling.kafka.event.DepositRequestEventData;
 import ru.gur.archbilling.kafka.event.OrderPaidEventData;
@@ -48,7 +47,7 @@ public class AccountServiceHW09Impl implements AccountService {
 
         final KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
         final ReadOnlyKeyValueStore<String, Double> readOnlyKeyValueStore =
-                kafkaStreams.store(StoreQueryParameters.fromNameAndType("counts", QueryableStoreTypes.keyValueStore()));
+                kafkaStreams.store(StoreQueryParameters.fromNameAndType("countsGlobal", QueryableStoreTypes.keyValueStore()));
         readOnlyKeyValueStore.all()
                 .forEachRemaining(x -> System.out.println(x.key + "->" + x.value));
 
@@ -111,7 +110,7 @@ public class AccountServiceHW09Impl implements AccountService {
     private Double getBalance(final UUID accountId) {
         final KafkaStreams kafkaStreams = factoryBean.getKafkaStreams();
         final ReadOnlyKeyValueStore<String, Double> readOnlyKeyValueStore =
-                kafkaStreams.store(StoreQueryParameters.fromNameAndType("counts", QueryableStoreTypes.keyValueStore()));
+                kafkaStreams.store(StoreQueryParameters.fromNameAndType("countsGlobal", QueryableStoreTypes.keyValueStore()));
 
         return Optional.ofNullable(readOnlyKeyValueStore.get(accountId.toString()))
                 .orElseThrow(() -> new RuntimeException("account not found"));

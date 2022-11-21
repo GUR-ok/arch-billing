@@ -21,7 +21,7 @@ public class HealthCheck {
 
         kafkaStreams.store(StoreQueryParameters.fromNameAndType("counts", QueryableStoreTypes.keyValueStore()))
                 .all()
-                .forEachRemaining(x -> System.out.println(x.key + "->" + x.value));
+                .forEachRemaining(x -> System.out.println(x.key + "->" + x.value + "\n"));
 
         return Health.builder()
                 .status(Health.HealthStatus.OK)
